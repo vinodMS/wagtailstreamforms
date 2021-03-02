@@ -68,6 +68,21 @@ Whats New:
 * Files can now be uploaded and are stored along with the submission using the default storage.
 * There is a management command to easily remove old submission data.
 
+2.1.2
+-----
+
+* Added wagtail framework classifier
+
+2.1.1
+-----
+
+* Fixed another migration issue
+
+2.1.0
+-----
+
+* Update to Wagtail 2.1
+
 2.0.1
 -----
 

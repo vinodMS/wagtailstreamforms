@@ -8,6 +8,8 @@ from wagtailstreamforms import __version__
 
 
 install_requires = [
+    'Django>=2,<2.1',
+    'django-recaptcha>=1.3.1',
     'wagtail>=2,<2.8'
 ]
 
@@ -47,6 +49,8 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
+        'Framework :: Wagtail',
+        'Framework :: Wagtail :: 2',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
