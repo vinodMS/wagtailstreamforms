@@ -9,20 +9,21 @@ from django.views.generic import ListView
 from django.views.generic.detail import SingleObjectMixin
 
 from wagtail.contrib.modeladmin.helpers import PermissionHelper
-from wagtail.contrib.forms.forms import SelectDateForm
-from wagtailstreamforms.models import BaseForm
+
+from wagtailstreamforms.forms import SelectDateForm
+from wagtailstreamforms.models import Form
 
 
 class SubmissionListView(SingleObjectMixin, ListView):
     paginate_by = 25
     page_kwarg = 'p'
-    template_name = 'streamforms/submissions.html'
+    template_name = 'streamforms/index_submissions.html'
     filter_form = None
-    model = BaseForm
+    model = Form
 
     @property
     def permission_helper(self):
-        return PermissionHelper(model=self.object.specific_class)
+        return PermissionHelper(model=self.model)
 
     def dispatch(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -33,9 +34,9 @@ class SubmissionListView(SingleObjectMixin, ListView):
     def get_object(self, queryset=None):
         pk = self.kwargs.get(self.pk_url_kwarg)
         try:
-            return self.model.objects.get(pk=pk).specific
+            return self.model.objects.get(pk=pk)
         except self.model.DoesNotExist:
-            raise Http404(_("No BaseForm found matching the query"))
+            raise Http404(_("No Form found matching the query"))
 
     def get(self, request, *args, **kwargs):
         self.filter_form = SelectDateForm(request.GET)
@@ -47,7 +48,7 @@ class SubmissionListView(SingleObjectMixin, ListView):
 
     def csv(self):
         queryset = self.get_queryset()
-        data_fields = self.object.get_data_fields()
+        data_fields = self.object.get_data_fields_v2()
         data_headings = [smart_str(label) for name, label in data_fields]
 
         response = HttpResponse(content_type='text/csv; charset=utf-8')
@@ -78,20 +79,21 @@ class SubmissionListView(SingleObjectMixin, ListView):
                 date_to += datetime.timedelta(days=1)
                 self.queryset = self.queryset.filter(submit_time__lte=date_to)
 
-        return self.queryset
+        return self.queryset.prefetch_related('files')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        data_fields = self.object.get_data_fields()
+        data_fields = self.object.get_data_fields_v2()
         data_headings = [label for name, label in data_fields]
 
         # populate data rows from paginator
         data_rows = []
         for s in context['page_obj']:
             form_data = s.get_data()
+            form_files = s.files.all()
             data_row = [form_data.get(name) for name, label in data_fields]
-            data_rows.append({'model_id': s.id, 'fields': data_row})
+            data_rows.append({'model_id': s.id, 'fields': data_row, 'files': form_files})
 
         context.update({
             'filter_form': self.filter_form,
